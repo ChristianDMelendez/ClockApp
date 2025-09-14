@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Christian Clock App</title>
+  <style>
+    body {
+      font-family: "Georgia", serif;
+      background: linear-gradient(135deg, #f9f7f7, #e0eafc);
+      color: #2c3e50;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      text-align: center;
+    }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+    #verse {
+      font-size: 1.2rem;
+      margin: 20px;
+      max-width: 600px;
+      font-style: italic;
+      transition: opacity 1s ease-in-out;
+      opacity: 1;
+    }
+    audio {
+      margin-top: 20px;
+      width: 300px;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="clock">--:--:--</h1>
+  <div id="verse">Loading verse...</div>
+
+  <!-- KSBJ Radio -->
+  <audio controls autoplay>
+    <source src="https://ksbj.streamguys1.com/ksbj/mp3/icecast.audio" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <script>
+    // Clock
+    function updateClock() {
+      const now = new Date();
+      document.getElementById("clock").textContent =
+        now.toLocaleTimeString();
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Bible verses
+    const verses = [
+      "I can do all things through Christ who strengthens me. – Philippians 4:13",
+      "For God so loved the world that He gave His one and only Son. – John 3:16",
+      "The Lord is my shepherd; I shall not want. – Psalm 23:1",
+      "Be strong and courageous. Do not be afraid; for the Lord your God goes with you. – Deuteronomy 31:6",
+      "Cast all your anxiety on Him because He cares for you. – 1 Peter 5:7",
+      "The joy of the Lord is your strength. – Nehemiah 8:10",
+      "Trust in the Lord with all your heart and lean not on your own understanding. – Proverbs 3:5",
+      // Add more verses here to reach a total of 1,440
+    ];
+
+    // Shuffle verses
+    function shuffleVerses() {
+      for (let i = verses.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [verses[i], verses[j]] = [verses[j], verses[i]];
+      }
+    }
+
+    // Display verse
+    function displayVerse() {
+      const now = new Date();
+      const minuteOfDay = now.getHours() * 60 + now.getMinutes();
+      const verseEl = document.getElementById("verse");
+      verseEl.style.opacity = 0;
+      setTimeout(() => {
+        verseEl.textContent = verses[minuteOfDay];
+        verseEl.style.opacity = 1;
+      }, 1000);
+    }
+
+    // Initialize
+    shuffleVerses();
+    displayVerse();
+    setInterval(displayVerse, 60000); // Change verse every minute
+  </script>
+</body>
+</html>
