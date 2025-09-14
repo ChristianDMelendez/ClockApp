@@ -6,13 +6,13 @@
   <title>Daily Inspiration — Christian Clock</title>
   <style>
     :root{
-      --bg1: #30406b;
-      --bg2: #5b5fc7;
+      --bg1:#283a6b;
+      --bg2:#5b65c7;
       --card: rgba(255,255,255,0.06);
-      --accent: #ffd166;
-      --muted: rgba(230,238,246,0.7);
-      --text: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      --accent:#ffd166;
+      --muted: rgba(230,238,246,0.78);
+      --text:#ffffff;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial;
     }
     html,body{height:100%;margin:0}
     body{
@@ -21,150 +21,107 @@
       justify-content:center;
       background: linear-gradient(180deg,var(--bg1),var(--bg2));
       color:var(--text);
-      padding:24px;
+      padding:20px;
       -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
     }
-    .wrap{
+    .container{
       width:100%;
-      max-width:760px;
+      max-width:820px;
       text-align:center;
+      padding-bottom:92px; /* room for bottom fallback */
     }
-    .title{
-      margin-top:6px;
-      margin-bottom:22px;
-    }
-    h1{
-      font-size:2rem;
-      margin:0;
-      color:var(--text);
-      letter-spacing:0.6px;
-      font-weight:600;
-    }
-    .subtitle{
-      margin-top:6px;
-      color:var(--muted);
-      font-size:0.95rem;
-    }
+    h1{ margin:0; font-size:1.9rem; font-weight:600; color:var(--text); }
+    .subtitle{ margin-top:8px; color:var(--muted); font-size:0.95rem; }
 
-    .clock-area{
-      margin:28px 0 22px;
-    }
-    .time{
-      font-size:4.6rem;
-      line-height:1;
-      font-weight:700;
-      letter-spacing:1px;
-      margin:0;
-    }
-    .ampm{ font-size:1.2rem; display:block; margin-top:6px; color:var(--muted); }
+    .clock{ margin-top:28px; }
+    .time{ font-size:4.2rem; margin:0; line-height:1; font-weight:700; letter-spacing:1px; }
+    .ampm{ font-size:1.05rem; color:var(--muted); margin-top:6px; }
+    .date{ margin-top:12px; color:var(--muted); font-size:1rem; }
 
-    .date{
-      margin-top:12px;
-      color:var(--muted);
-      font-size:1rem;
-    }
+    .verse{ margin-top:28px; background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      border-radius:16px; padding:26px 20px; box-shadow: 0 10px 30px rgba(2,6,23,0.45); color:var(--muted); }
+    .verse .quote{ font-style:italic; color:var(--text); font-size:1.12rem; line-height:1.6; margin:0 0 14px 0; }
+    .verse .ref{ color:var(--accent); font-weight:700; font-size:0.98rem; }
 
-    .verse-card{
-      margin-top:26px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
-      border-radius:18px;
-      padding:28px 22px;
-      box-shadow: 0 8px 30px rgba(2,6,23,0.45);
-      color:var(--muted);
-    }
-    .verse-quote{
-      font-style:italic;
-      font-size:1.15rem;
-      line-height:1.6;
-      color:var(--text);
-      margin:0 0 16px 0;
-    }
-    .verse-ref{
-      color:var(--accent);
-      font-weight:700;
-      font-size:0.98rem;
-    }
-
-    /* bottom player (minimal) */
-    .bottom-player{
+    /* Centered big Play overlay (visible until user clicks) */
+    .overlay {
       position:fixed;
-      left:0;
-      right:0;
-      bottom:12px;
+      inset:0;
       display:flex;
       align-items:center;
       justify-content:center;
-      pointer-events:auto;
-      z-index:1000;
+      background: rgba(10,12,20,0.45);
+      z-index:1200;
+      transition: opacity .25s ease;
     }
-    .player-bar{
-      background:rgba(0,0,0,0.45);
-      padding:8px 12px;
-      border-radius:999px;
-      display:flex;
-      gap:10px;
-      align-items:center;
-      box-shadow:0 6px 20px rgba(0,0,0,0.45);
-      color:var(--muted);
-      backdrop-filter: blur(6px);
-    }
-    .player-bar button{
+    .play-pill{
       background:var(--accent);
       color:#04111a;
-      border:0;
-      padding:8px 12px;
       border-radius:999px;
-      font-weight:700;
+      padding:20px 28px;
+      font-weight:800;
+      font-size:1.1rem;
       cursor:pointer;
+      box-shadow:0 10px 30px rgba(2,6,23,0.6);
     }
-    .player-bar small{ font-size:0.85rem; color:var(--muted); margin-left:6px; }
+    .play-sub{ display:block; font-weight:600; font-size:0.85rem; margin-top:8px; color:#04111a; opacity:0.9 }
 
-    /* YouTube container is visually hidden (we embed but keep minimal controls) */
-    .yt-container{ width:1px; height:1px; overflow:hidden; position:absolute; left:-9999px; top:-9999px; }
+    /* Hidden iframe container for audio-only playback (1x1 offscreen) */
+    .yt-hidden{ position:fixed; left:-9999px; top:-9999px; width:1px; height:1px; overflow:hidden; }
 
-    @media (max-width:520px){
-      .time{ font-size:3.2rem }
-      .verse-card{ padding:20px }
-      h1{ font-size:1.5rem }
+    /* Bottom fallback (only shown if something goes wrong) */
+    .bottom-player{ position:fixed; left:12px; right:12px; bottom:12px; z-index:1201; display:none; justify-content:center; }
+    .player-bar{ background: rgba(0,0,0,0.5); padding:10px 14px; border-radius:999px; display:flex; gap:10px; align-items:center; box-shadow: 0 8px 24px rgba(0,0,0,0.45); color:var(--muted); backdrop-filter: blur(6px); max-width:720px; width:calc(100% - 24px); }
+    .player-bar button{ background:var(--accent); color:#04111a; border:0; padding:8px 14px; border-radius:999px; font-weight:700; cursor:pointer; }
+
+    @media (max-width:560px){
+      .time{ font-size:3rem }
+      .play-pill{ padding:14px 18px; font-size:1rem }
     }
   </style>
 </head>
 <body>
-  <div class="wrap" role="main">
-    <div class="title" aria-hidden="false">
+  <div class="container" role="main">
+    <header>
       <h1>Daily Inspiration</h1>
       <div class="subtitle">Let His word guide your day</div>
-    </div>
+    </header>
 
-    <div class="clock-area" aria-live="polite">
+    <section class="clock" aria-live="polite">
       <div id="time" class="time">--:--:--</div>
       <div id="ampm" class="ampm">--</div>
       <div id="date" class="date">Loading date...</div>
-    </div>
+    </section>
 
-    <div class="verse-card" id="verseCard" role="region" aria-label="Verse of the minute">
-      <div class="verse-quote" id="verseText">Loading verse…</div>
-      <div class="verse-ref" id="verseRef"></div>
+    <section class="verse" aria-label="Verse of the minute">
+      <div id="verseQuote" class="quote">Loading verse…</div>
+      <div id="verseRef" class="ref"></div>
+    </section>
+  </div>
+
+  <!-- Big centered Play overlay: user must click once to allow audible playback -->
+  <div id="overlay" class="overlay" role="dialog" aria-modal="true" aria-label="Tap to play audio">
+    <div style="text-align:center">
+      <div id="playButton" class="play-pill" role="button" aria-pressed="false">
+        Play Live Audio
+        <span class="play-sub">Tap once to start audio with sound</span>
+      </div>
     </div>
   </div>
 
-  <!-- Invisible YouTube iframe holder (we try autoplay muted first). If autoplay doesn't work, the bottom player appears. -->
-  <div class="yt-container" id="ytContainer" aria-hidden="true"></div>
+  <!-- Hidden offscreen iframe target for audio-only (created on click) -->
+  <div id="ytHidden" class="yt-hidden" aria-hidden="true"></div>
 
-  <!-- Minimal bottom player only shown when autoplay fails -->
-  <div class="bottom-player" id="bottomPlayer" style="display:none;">
+  <!-- Bottom fallback player (only shown when needed) -->
+  <div class="bottom-player" id="bottomPlayer">
     <div class="player-bar" role="region" aria-label="Player controls">
-      <button id="manualPlay">Play Live</button>
-      <button id="manualUnmute" style="display:none;">Unmute</button>
-      <small id="playerNote">Tap to start audio if autoplay is blocked</small>
+      <button id="fallbackPlay">Play</button>
+      <small id="fallbackNote" style="color:var(--muted)">Tap to start audio</small>
     </div>
   </div>
 
   <script>
-    // -------------------------
-    // Clock + verse logic
-    // -------------------------
+    // --------- Clock + verse logic (keeps behavior simple) ----------
     const baseVerses = [
       {"reference":"Philippians 4:13","text":"I can do all things through Christ who strengthens me."},
       {"reference":"Psalm 23:1","text":"The LORD is my shepherd; I shall not want."},
@@ -187,9 +144,8 @@
 
     function pad(n){ return String(n).padStart(2,'0'); }
 
-    function updateClock(){
+    function updateClockOnce(){
       const now = new Date();
-      // 12-hour with seconds, and AM/PM
       let h = now.getHours();
       const ampm = h >= 12 ? 'PM' : 'AM';
       let hr12 = h % 12; hr12 = hr12 === 0 ? 12 : hr12;
@@ -199,194 +155,97 @@
       document.getElementById('date').textContent = now.toLocaleDateString(undefined, opts);
     }
 
-    function getMinuteIndex(date = new Date()){
-      return date.getHours()*60 + date.getMinutes();
-    }
-
     function renderVerseForMinute(idx){
       if (!minuteVerses || minuteVerses.length === 0) return;
       const v = minuteVerses[idx % minuteVerses.length];
-      document.getElementById('verseText').textContent = `"${v.text}"`;
+      document.getElementById('verseQuote').textContent = `"${v.text}"`;
       document.getElementById('verseRef').textContent = v.reference || '';
     }
 
-    function scheduleMinuteUpdates(){
-      updateClock();
-      renderVerseForMinute(getMinuteIndex());
+    function scheduleClockAndVerses(){
+      updateClockOnce();
+      renderVerseForMinute(new Date().getHours()*60 + new Date().getMinutes());
+      setInterval(updateClockOnce, 1000); // seconds tick
       const now = new Date();
-      const msToNextSecond = 1000 - now.getMilliseconds();
+      const msToNextMinute = (60 - now.getSeconds())*1000 - now.getMilliseconds();
       setTimeout(() => {
-        // keep ticking seconds
-        setInterval(updateClock, 1000);
-      }, msToNextSecond);
-
-      const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
-      setTimeout(() => {
-        renderVerseForMinute(getMinuteIndex(new Date()));
-        setInterval(() => renderVerseForMinute(getMinuteIndex()), 60*1000);
+        renderVerseForMinute(new Date().getHours()*60 + new Date().getMinutes());
+        setInterval(() => renderVerseForMinute(new Date().getHours()*60 + new Date().getMinutes()), 60*1000);
       }, msToNextMinute);
     }
 
-    // initialize verses and clock
     buildMinuteVerses();
-    scheduleMinuteUpdates();
+    scheduleClockAndVerses();
 
-    // -------------------------
-    // YouTube embed logic
-    // -------------------------
-    // Video ID from your link: _QqFhkOcljI
+    // --------- Audio behavior (unmuted playback initiated by click) ----------
+    // Your YouTube live video id:
     const YT_ID = '_QqFhkOcljI';
-    let ytPlayerReady = false;
-    let autoplayWorked = false;
-    let apiLoaded = false;
 
-    // Insert IFrame API script
-    (function loadYouTubeAPI(){
-      const s = document.createElement('script');
-      s.src = "https://www.youtube.com/iframe_api";
-      s.async = true;
-      s.onload = () => { apiLoaded = true; };
-      document.head.appendChild(s);
-    })();
-
-    // This function is called by the YouTube API when ready
-    function onYouTubeIframeAPIReady(){
-      // create a hidden player that attempts autoplay muted
-      const container = document.getElementById('ytContainer');
-      const playerDiv = document.createElement('div');
-      playerDiv.id = 'yt-player';
-      container.appendChild(playerDiv);
-
-      /* global YT */
-      yt = new YT.Player('yt-player', {
-        videoId: YT_ID,
-        playerVars: {
-          autoplay: 1,
-          mute: 1,
-          controls: 0,
-          rel: 0,
-          modestbranding: 1,
-          playsinline: 1
-        },
-        events: {
-          onReady: (e) => {
-            try { e.target.playVideo(); } catch(e){}
-            ytPlayerReady = true;
-            // allow a short timeout to determine if autoplay started
-            setTimeout(checkAutoplayStatus, 1200);
-          },
-          onStateChange: (ev) => {
-            // if playing in any form, consider autoplay success (muted or audible later)
-            if (ev.data === YT.PlayerState.PLAYING) {
-              autoplayWorked = true;
-              hideBottomPlayer();
-            }
-          },
-          onError: () => {
-            // If API errors, we'll show manual controls
-            showBottomPlayer();
-          }
-        }
-      });
+    // Helper to create a tiny offscreen iframe that requests autoplay unmuted.
+    // Important: this iframe is created inside the click handler so the browser treats it as a user gesture.
+    function createAudioIframeUnmuted() {
+      const container = document.getElementById('ytHidden');
+      // If already created, do nothing
+      if (container.querySelector('iframe')) return true;
+      const iframe = document.createElement('iframe');
+      // autoplay=1&mute=0 - since this is created on user click, browsers allow playback with sound
+      iframe.src = `https://www.youtube.com/embed/${YT_ID}?autoplay=1&mute=0&playsinline=1&rel=0&modestbranding=1`;
+      iframe.allow = 'autoplay; encrypted-media';
+      iframe.width = '1';
+      iframe.height = '1';
+      iframe.style.border = '0';
+      container.appendChild(iframe);
+      return true;
     }
 
-    // check if autoplay actually started; if not, show bottom player
-    function checkAutoplayStatus(){
+    // Primary user gesture: large centered Play button
+    const overlay = document.getElementById('overlay');
+    const playButton = document.getElementById('playButton');
+    const bottomPlayer = document.getElementById('bottomPlayer');
+    const fallbackPlay = document.getElementById('fallbackPlay');
+
+    playButton.addEventListener('click', async () => {
+      // Make sure this click is a clear user gesture that allows unmuted audio
       try {
-        if (typeof yt !== 'undefined' && yt && yt.getPlayerState) {
-          const state = yt.getPlayerState();
-          if (state === YT.PlayerState.PLAYING) {
-            autoplayWorked = true;
-            hideBottomPlayer();
-            return;
-          }
-        }
-      } catch (e){}
-      // If we get here, autoplay likely blocked — show manual player bar
-      showBottomPlayer();
-    }
-
-    function showBottomPlayer(){
-      const bar = document.getElementById('bottomPlayer');
-      if (bar) bar.style.display = 'flex';
-      // if the player wasn't created via API (YT failed to load), create an iframe fallback to try muted autoplay
-      if (!ytPlayerReady && !document.getElementById('yt-fallback')) {
-        const fallback = document.createElement('iframe');
-        fallback.id = 'yt-fallback';
-        fallback.src = `https://www.youtube.com/embed/${YT_ID}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`;
-        fallback.allow = "autoplay; encrypted-media; picture-in-picture";
-        fallback.width = "1";
-        fallback.height = "1";
-        fallback.setAttribute('allowfullscreen','');
-        document.getElementById('ytContainer').appendChild(fallback);
-      }
-      // reveal unmute button once user interacts
-      document.getElementById('manualUnmute').style.display = 'inline-block';
-    }
-
-    function hideBottomPlayer(){
-      const bar = document.getElementById('bottomPlayer');
-      if (bar) bar.style.display = 'none';
-    }
-
-    // Manual controls (in bottom player)
-    document.getElementById('manualPlay').addEventListener('click', function(){
-      // If API available, try to play; otherwise, create a visible embed as last resort
-      if (typeof yt !== 'undefined' && yt && yt.playVideo) {
-        try { yt.playVideo(); autoplayWorked = true; hideBottomPlayer(); } catch(e){}
-      } else {
-        // fallback: open a focused small in-page player (muted by default)
-        const wrap = document.getElementById('ytContainer');
-        if (!document.getElementById('yt-visible')) {
-          const frame = document.createElement('iframe');
-          frame.id = 'yt-visible';
-          frame.src = `https://www.youtube.com/embed/${YT_ID}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1`;
-          frame.width = "560";
-          frame.height = "315";
-          frame.style.border = "0";
-          // place it offscreen visually minimal (user didn't want big controls) but this ensures playback
-          wrap.appendChild(frame);
-        }
-        // still show unmute control
-        showBottomPlayer();
+        createAudioIframeUnmuted();
+        // hide overlay immediately
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.style.display = 'none', 220);
+      } catch (e) {
+        // if creation fails for some reason, reveal fallback control
+        overlay.style.display = 'none';
+        bottomPlayer.style.display = 'flex';
       }
     });
 
-    document.getElementById('manualUnmute').addEventListener('click', function(){
-      // user gesture to enable audio
-      if (typeof yt !== 'undefined' && yt && yt.unMute) {
-        try {
-          yt.unMute();
-          if (yt.setVolume) yt.setVolume(60);
-          yt.playVideo();
-          hideBottomPlayer();
-        } catch(e){
-          // fallback: open new window as last resort to ensure audio (rare)
-          console.warn(e);
-        }
-      } else {
-        // if only fallback iframe present, try to replace it with an unmuted embed link (attempt)
-        const visible = document.getElementById('yt-visible') || document.getElementById('yt-fallback');
-        if (visible) {
-          visible.src = `https://www.youtube.com/embed/${YT_ID}?autoplay=1&mute=0&playsinline=1&rel=0&modestbranding=1`;
-          hideBottomPlayer();
-        } else {
-          // as a last option open the live in a new tab
-          window.open(`https://www.youtube.com/live/${YT_ID}`, '_blank');
-        }
+    // fallback small button at bottom (if user closed overlay or something failed)
+    fallbackPlay.addEventListener('click', () => {
+      try {
+        createAudioIframeUnmuted();
+        bottomPlayer.style.display = 'none';
+      } catch (e) {
+        // last resort: open the live stream in a new tab
+        window.open(`https://www.youtube.com/live/${YT_ID}`, '_blank');
       }
     });
 
-    // If API script never loads, set a timeout to decide autoplay failed
-    setTimeout(() => {
-      if (!apiLoaded && !autoplayWorked) {
-        showBottomPlayer();
+    // If the user dismisses overlay by clicking outside (optional), show fallback
+    overlay.addEventListener('click', (ev) => {
+      if (ev.target === overlay) {
+        overlay.style.display = 'none';
+        bottomPlayer.style.display = 'flex';
       }
-    }, 1800);
+    });
 
-    // Expose YT callback globally for API to call
-    window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+    // Accessibility: allow space/enter on focused playButton
+    playButton.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') {
+        ev.preventDefault();
+        playButton.click();
+      }
+    });
 
+    // Done — the big Play overlay will be the single required user gesture that starts audible playback.
   </script>
 </body>
 </html>
