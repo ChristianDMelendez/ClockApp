@@ -1,132 +1,834 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>The Selah Radio — Login Required</title>
-<style>
-/* Fallback fonts and no CSS variables for old browsers */
-html,body{height:100%;margin:0;font-family:Arial,Helvetica,sans-serif;background:#3b0b0b;color:#fff;}
-/* Modern browsers will override with vars */
-:root{
-  --bg1:#3b0b0b; --bg2:#7a1f2b; --accent:#d4a017;
-  --muted:rgba(242,236,230,0.78); --text:#fff8f2;
-  font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-}
-body{
-  background:#3b0b0b;
-  background:
-    radial-gradient(1000px 500px at 10% 10%, rgba(212,160,23,0.06), transparent 8%),
-    linear-gradient(180deg,var(--bg1,#3b0b0b),var(--bg2,#7a1f2b));
-  color:var(--text,#fff);
-  -webkit-font-smoothing:antialiased;
-  display:flex;align-items:center;justify-content:center;padding:22px;
-}
-.container{width:100%;max-width:920px;text-align:center;padding:34px;}
-header{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:justify;-ms-flex-pack:justify;justify-content:space-between;}
-.left{display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;}
-.logo{width:64px;height:64px;border-radius:12px;background:#2a0a0a;display:flex;align-items:center;justify-content:center;}
-h1{margin:0;font-size:1.45rem;font-weight:700;color:var(--text,#fff);}
-.subtitle{color:var(--muted,#ccc);font-size:0.95rem;}
-.clock{margin-top:18px;}
-.time{font-size:3.6rem;margin:0;font-weight:800;letter-spacing:1px;}
-.ampm,.date{color:var(--muted,#ccc);font-size:1rem;}
-.verse{margin-top:18px;padding:20px;border-radius:10px;background:#2a0a0a;color:var(--muted,#ccc);}
-.verse .quote{font-style:italic;color:var(--text,#fff);font-size:1.1rem;margin-bottom:10px;}
-.verse .ref{color:var(--accent,#d4a017);font-weight:bold;}
-.login-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:3000;}
-.login-card{width:100%;max-width:400px;background:#2a0a0a;color:var(--muted,#ccc);padding:20px;border-radius:10px;}
-.field{margin-bottom:12px;text-align:left;}
-input[type=text],input[type=password]{width:100%;padding:10px;border-radius:8px;border:1px solid #444;background:#111;color:#fff;}
-button{cursor:pointer;}
-button.primary{background:var(--accent,#d4a017);color:#000;padding:10px 14px;border:0;border-radius:8px;font-weight:bold;}
-button.ghost{background:transparent;color:var(--muted,#ccc);border:0;padding:8px;}
-.play-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:1600;}
-.play-pill{background:var(--accent,#d4a017);color:#000;padding:18px 26px;border-radius:999px;font-weight:bold;cursor:pointer;}
-.yt-hidden{position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>The Selah Radio — Login Required</title>
+
+  <!--
+    Compatibility improvements (non-invasive):
+    - Provide a globally-available SVG <defs> with the "lg" gradient so small inline svgs can reliably reference it across browsers.
+    - Add tiny DOM/polyfill shims for older engines (matches, NodeList.forEach).
+    - Ensure the main script runs after DOMContentLoaded to avoid timing differences across browsers.
+    - Keep all logic and markup intact; changes are minimal and conservative.
+  -->
+  <svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+    <defs>
+      <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#ffd88a" stop-opacity="0.98"/>
+        <stop offset="100%" stop-color="#c99a14" stop-opacity="0.98"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <style>
+    :root{
+      /* Maroon & gold palette (will work in modern browsers; older ones will fall back to simple colors) */
+      --bg1:#3b0b0b;
+      --bg2:#7a1f2b;
+      --accent:#d4a017;
+      --muted: rgba(242,236,230,0.78);
+      --text:#fff8f2;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    html,body{height:100%;margin:0}
+    body{
+      background:
+        radial-gradient(1000px 500px at 10% 10%, rgba(212,160,23,0.06), transparent 8%),
+        linear-gradient(180deg,var(--bg1),var(--bg2));
+      /* fallback solid color for very old browsers that don't understand gradients */
+      background-color: #3b0b0b;
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      display:flex; align-items:center; justify-content:center;
+      padding:22px;
+      transition:background .3s ease;
+    }
+
+    .container{
+      width:100%; max-width:920px; text-align:center; padding:34px;
+      transform:translateY(6px);
+      animation: floatIn .5s cubic-bezier(.2,.8,.2,1);
+    }
+
+    @keyframes floatIn {
+      from { opacity:0; transform:translateY(18px) scale(.995) }
+      to   { opacity:1; transform:translateY(0) scale(1) }
+    }
+
+    header{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .left { display:flex; align-items:center; gap:14px; }
+    .logo { width:64px; height:64px; flex:0 0 64px; display:flex; align-items:center; justify-content:center; border-radius:12px; background: linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)); box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
+    .title { text-align:left; }
+    h1{ margin:0; font-size:1.45rem; font-weight:700; color:var(--text); letter-spacing:0.6px; }
+    .subtitle{ margin-top:6px; color:var(--muted); font-size:0.95rem; }
+
+    .greeting{ margin-top:12px; text-align:left; color:var(--muted); display:none; }
+    .greeting strong{ color:var(--text); }
+
+    .clock{ margin-top:18px; text-align:center; }
+    .time{ font-size:4.6rem; margin:0; line-height:1; font-weight:800; letter-spacing:1px; text-shadow: 0 4px 18px rgba(0,0,0,0.6); }
+    .ampm{ font-size:1.05rem; color:var(--muted); margin-top:6px; }
+    .date{ margin-top:12px; color:var(--muted); font-size:1rem; }
+
+    .verse{
+      margin-top:18px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:14px; padding:26px 20px; box-shadow: 0 14px 40px rgba(12,6,6,0.45);
+      color:var(--muted); text-align:center;
+      border: 1px solid rgba(212,160,23,0.06);
+      /* backdrop-filter is not supported everywhere; it's decorative — safe to include */
+      backdrop-filter: blur(6px) saturate(1.05);
+    }
+    .verse .quote{ font-style:italic; color:var(--text); font-size:1.12rem; line-height:1.6; margin:0 0 12px 0; }
+    .verse .ref{ color:var(--accent); font-weight:700; font-size:0.98rem; }
+
+    /* Forced Login overlay */
+    .login-overlay {
+      position:fixed; inset:0; z-index:3000;
+      display:flex; align-items:center; justify-content:center;
+      background: linear-gradient(rgba(11,6,6,0.88), rgba(15,8,8,0.86));
+      padding:20px;
+    }
+    .login-card {
+      width:100%; max-width:520px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:14px; padding:22px; box-shadow:0 20px 60px rgba(0,0,0,0.7); color:var(--muted);
+      border: 1px solid rgba(212,160,23,0.06);
+    }
+    .login-card h2{ margin:0 0 8px 0; color:var(--accent); font-size:1.05rem; display:flex; align-items:center; gap:8px; }
+
+    .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+    label.small{ font-size:0.9rem; color:var(--muted) }
+
+    input[type="text"], input[type="password"], input[type="email"]{
+      padding:12px 14px; border-radius:10px; border:0; background:rgba(255,255,255,0.02); color:var(--text);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+      transition: box-shadow .12s ease, transform .06s ease;
+    }
+    input[type="text"]:focus, input[type="password"]:focus, input[type="email"]:focus{
+      outline: none;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.6), 0 0 0 4px rgba(212,160,23,0.06);
+      transform: translateY(-1px);
+    }
+
+    .row{ display:flex; gap:8px; align-items:center; justify-content:space-between; }
+    button.primary{
+      background:var(--accent); color:#2a1200; padding:10px 14px; border-radius:10px; border:0; font-weight:800; cursor:pointer;
+      transition: transform .12s ease, box-shadow .12s ease;
+      box-shadow: 0 10px 30px rgba(212,160,23,0.08);
+    }
+    button.primary:hover{ transform: translateY(-3px); box-shadow: 0 18px 40px rgba(212,160,23,0.12); }
+    button.ghost{ background:transparent; color:var(--muted); border:0; cursor:pointer; padding:8px; }
+    button.ghost:hover{ color:var(--text); transform: translateY(-2px); }
+
+    .small{ font-size:0.88rem; color:var(--muted); }
+    .muted-center{ text-align:center; color:var(--muted); margin-top:8px; font-size:0.88rem; }
+
+    /* Play overlay after login */
+    .play-overlay {
+      position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+      background: rgba(10,8,8,0.45); z-index:1600; transition:opacity .25s;
+    }
+    .play-pill{
+      background: linear-gradient(180deg, var(--accent), #c99a14);
+      color:#2a1200; border-radius:999px; padding:18px 26px; font-weight:900; font-size:1.05rem; cursor:pointer;
+      box-shadow: 0 14px 40px rgba(212,160,23,0.15), inset 0 -6px 18px rgba(0,0,0,0.12);
+      transition: transform .12s ease, box-shadow .12s ease, opacity .18s ease;
+    }
+    .play-pill:hover{ transform: translateY(-4px) scale(1.02); box-shadow: 0 26px 64px rgba(212,160,23,0.2); }
+    .play-sub{ display:block; font-weight:700; font-size:0.84rem; margin-top:8px; color:#2a1200; opacity:0.95 }
+
+    /* hidden iframe (audio only) */
+    .yt-hidden{ position:fixed; left:-9999px; top:-9999px; width:1px; height:1px; overflow:hidden; }
+
+    .brand-badge{
+      display:inline-flex; gap:8px; align-items:center; color:var(--muted); font-weight:600;
+    }
+
+    @media (max-width:760px){
+      header{ flex-direction:column; align-items:flex-start; gap:10px; }
+      .time{ font-size:3.6rem }
+      .logo{ width:56px; height:56px }
+      .container{ padding:18px }
+    }
+
+    /* Respect OS-level reduced motion preference */
+    @media (prefers-reduced-motion: reduce) {
+      .container, .logo, .play-pill { animation: none !important; transition: none !important; }
+    }
+  </style>
 </head>
 <body>
-<div class="container" id="appContent" aria-hidden="true">
-  <header>
-    <div class="left">
-      <div class="logo">
-        <svg viewBox="0 0 100 100" width="56" height="56" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="50" cy="50" r="46" fill="#7a1f2b"/>
-          <circle cx="50" cy="50" r="40" fill="#d4a017" opacity="0.07"/>
-          <path d="M36 30 C48 14, 70 18, 66 34 C62 50, 44 50, 48 66 C52 82, 74 78, 64 58"
-           fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <div class="title">
-        <h1>The Selah Radio</h1>
-        <div class="subtitle">A gentle moment of scripture and stillness — login to begin</div>
-      </div>
-    </div>
-  </header>
-  <section class="clock">
-    <div id="time" class="time">--:--:--</div>
-    <div id="ampm" class="ampm">--</div>
-    <div id="date" class="date">Loading date...</div>
-  </section>
-  <section class="verse">
-    <div id="verseQuote" class="quote">Loading verse…</div>
-    <div id="verseRef" class="ref"></div>
-  </section>
-</div>
+  <!-- App content is present but hidden from assistive tech until login -->
+  <div class="container" id="appContent" aria-hidden="true">
+    <header>
+      <div class="left">
+        <div class="logo" aria-hidden="true">
+          <!-- Inline SVG logo: stylized 'S' with a leaf / halo -->
+          <svg viewBox="0 0 100 100" width="56" height="56" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="logoTitle">
+            <title id="logoTitle">The Selah Radio logo</title>
+            <defs>
+              <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#ffd88a" stop-opacity="0.98"/>
+                <stop offset="100%" stop-color="#c99a14" stop-opacity="0.98"/>
+              </linearGradient>
+              <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#7a1f2b"/>
+                <stop offset="100%" stop-color="#3b0b0b"/>
+              </linearGradient>
+            </defs>
+            <!-- halo -->
+            <circle cx="50" cy="50" r="46" fill="url(#g2)" />
+            <circle cx="50" cy="50" r="40" fill="url(#g1)" opacity="0.07" />
+            <!-- stylized S -->
+            <path d="M36 30
+                     C48 14, 70 18, 66 34
+                     C62 50, 44 50, 48 66
+                     C52 82, 74 78, 64 58"
+                  fill="none" stroke="#fff8f2" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95"/>
+            <!-- leaf accent -->
+            <path d="M70 28 C76 22, 86 24, 80 32 C74 40, 64 38, 70 28 Z" fill="#fff8f2" opacity="0.12"/>
+          </svg>
+        </div>
 
-<div class="login-overlay" id="loginOverlay">
-  <div class="login-card">
-    <h2>Sign in to access The Selah Radio</h2>
-    <div id="messages"></div>
-    <div id="loginForm">
-      <div class="field">
-        <label>Username</label>
-        <input id="loginUser" type="text" />
+        <div class="title">
+          <h1 id="appTitle">The Selah Radio</h1>
+          <div class="subtitle" id="subtitle">A gentle moment of scripture and stillness — login to begin</div>
+        </div>
       </div>
-      <div class="field">
-        <label>Password</label>
-        <input id="loginPass" type="password" />
+
+      <div class="right">
+        <div class="greeting" id="greeting">
+          <div id="greetingText"></div>
+          <div style="font-size:0.9rem;color:var(--muted)">Timezone: <span id="tzName"></span></div>
+        </div>
       </div>
-      <button id="doLogin" class="primary">Sign in</button>
-      <button id="showRegister" class="ghost">Create account</button>
-    </div>
-    <div id="registerForm" style="display:none;">
-      <div class="field"><label>Choose username</label><input id="regUser" type="text"></div>
-      <div class="field"><label>Choose password</label><input id="regPass" type="password"></div>
-      <div class="field"><label>Confirm password</label><input id="regPass2" type="password"></div>
-      <button id="doRegister" class="primary">Create account</button>
-      <button id="showLogin" class="ghost">Back to sign in</button>
+    </header>
+
+    <section class="clock" aria-live="polite">
+      <div id="time" class="time">--:--:--</div>
+      <div id="ampm" class="ampm">--</div>
+      <div id="date" class="date">Loading date...</div>
+    </section>
+
+    <section class="verse" aria-label="Verse of the minute">
+      <div id="verseQuote" class="quote">Loading verse…</div>
+      <div id="verseRef" class="ref"></div>
+    </section>
+  </div>
+
+  <!-- Forced login overlay (blocking) -->
+  <div class="login-overlay" id="loginOverlay" role="dialog" aria-modal="true" aria-label="Login required">
+    <div class="login-card" role="document">
+      <h2>
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" style="margin-right:6px; transform:translateY(2px)">
+          <!-- This small SVG references the global "lg" gradient defined near the top of the document.
+               Having a globally-available <defs> (above) improves cross-browser reliability. -->
+          <circle cx="12" cy="12" r="10" fill="url(#lg)" />
+        </svg>
+        Sign in to access The Selah Radio
+      </h2>
+
+      <div id="messages" class="muted-center" aria-live="polite"></div>
+
+      <!-- Login form -->
+      <div id="loginForm">
+        <div class="field">
+          <label class="small">Username</label>
+          <input id="loginUser" type="text" autocomplete="username" />
+        </div>
+        <div class="field">
+          <label class="small">Password</label>
+          <input id="loginPass" type="password" autocomplete="current-password" />
+        </div>
+
+        <div class="row">
+          <label style="display:flex;align-items:center;gap:8px;"><input id="rememberChk" type="checkbox" /> <span class="small">Remember me</span></label>
+          <div>
+            <button id="doLogin" class="primary">Sign in</button>
+            <button id="showRegister" class="ghost">Create account</button>
+          </div>
+        </div>
+
+        <div style="margin-top:10px;" class="small">If you don't have an account, create one. Credentials are stored in-browser (localStorage) — not secure for secrets.</div>
+      </div>
+
+      <!-- Register form (hidden by default) -->
+      <div id="registerForm" style="display:none;">
+        <div class="field">
+          <label class="small">Choose username</label>
+          <input id="regUser" type="text" autocomplete="username" />
+        </div>
+        <div class="field">
+          <label class="small">Choose password</label>
+          <input id="regPass" type="password" autocomplete="new-password" />
+        </div>
+        <div class="field">
+          <label class="small">Confirm password</label>
+          <input id="regPass2" type="password" />
+        </div>
+
+        <div class="row">
+          <button id="doRegister" class="primary">Create account</button>
+          <button id="showLogin" class="ghost">Back to sign in</button>
+        </div>
+
+        <div style="margin-top:10px;" class="small">This creates an in-browser account stored only on this device and origin. Use for demos only.</div>
+      </div>
+
     </div>
   </div>
-</div>
 
-<div id="playOverlay" class="play-overlay" style="display:none;">
-  <div class="play-pill" id="playButton">Play Live Audio</div>
-</div>
-<div id="ytHidden" class="yt-hidden"></div>
+  <!-- Play overlay (shown after login to obtain audible user gesture) -->
+  <div id="playOverlay" class="play-overlay" style="display:none;">
+    <div style="text-align:center">
+      <div id="playButton" class="play-pill" role="button" aria-pressed="false" tabindex="0">
+        Play Live Audio
+        <span class="play-sub">Tap once to start audio with sound</span>
+      </div>
+    </div>
+  </div>
 
-<script>
-// Safe storage
-function safeGet(key){try{return localStorage.getItem(key)}catch(e){return null}}
-function safeSet(key,v){try{localStorage.setItem(key,v)}catch(e){}}
-function safeRem(key){try{localStorage.removeItem(key)}catch(e){}}
-// Fallback SHA-256 simple (not secure, but works in IE11)
-function sha256(str){if(window.crypto&&crypto.subtle){return crypto.subtle.digest("SHA-256",new TextEncoder().encode(str)).then(b=>Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join(""))}return Promise.resolve(str)}
-async function createUser(u,p){const users=JSON.parse(safeGet("users")||"{}");if(users[u])throw new Error("taken");users[u]={hash:await sha256(p)};safeSet("users",JSON.stringify(users))}
-async function verifyUser(u,p){const users=JSON.parse(safeGet("users")||"{}");if(!users[u])return false;return (await sha256(p))===users[u].hash}
-// UI
-const loginOverlay=document.getElementById("loginOverlay");
-document.getElementById("doLogin").onclick=async()=>{const u=document.getElementById("loginUser").value,p=document.getElementById("loginPass").value;if(await verifyUser(u,p)){loginOverlay.style.display="none";document.getElementById("appContent").removeAttribute("aria-hidden");document.getElementById("playOverlay").style.display="flex"}else alert("Invalid")};
-document.getElementById("doRegister").onclick=async()=>{const u=document.getElementById("regUser").value,p=document.getElementById("regPass").value,p2=document.getElementById("regPass2").value;if(p!==p2)return alert("Mismatch");try{await createUser(u,p);alert("Created");document.getElementById("registerForm").style.display="none";document.getElementById("loginForm").style.display="block"}catch(e){alert("Error:"+e.message)}};
-document.getElementById("showRegister").onclick=()=>{document.getElementById("loginForm").style.display="none";document.getElementById("registerForm").style.display="block"};
-document.getElementById("showLogin").onclick=()=>{document.getElementById("registerForm").style.display="none";document.getElementById("loginForm").style.display="block"};
-// clock
-function tick(){const d=new Date();document.getElementById("time").textContent=d.toLocaleTimeString();document.getElementById("ampm").textContent=d.getHours()>=12?"PM":"AM";document.getElementById("date").textContent=d.toDateString()}setInterval(tick,1000);tick();
-// verse
-const verses=[{reference:"Philippians 4:13",text:"I can do all things through Christ who strengthens me."},{reference:"Psalm 23:1",text:"The LORD is my shepherd; I shall not want."}];
-function showVerse(){const v=verses[Math.floor(Math.random()*verses.length)];document.getElementById("verseQuote").textContent=v.text;document.getElementById("verseRef").textContent=v.reference}
-setInterval(showVerse,60000);showVerse();
-</script>
+  <div id="ytHidden" class="yt-hidden" aria-hidden="true"></div>
+
+  <script>
+    (function () {
+      // Minimal shims for older engines (non-invasive)
+      if (!Element.prototype.matches) {
+        Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector || function(s){ var matches = (this.document || this.ownerDocument).querySelectorAll(s); var i = matches.length; while (--i >= 0 && matches.item(i) !== this) {} return i > -1; };
+      }
+      if (typeof NodeList !== 'undefined' && !NodeList.prototype.forEach) {
+        NodeList.prototype.forEach = Array.prototype.forEach;
+      }
+
+      // Run main code after DOM is ready to avoid timing quirks in some browsers.
+      function ready(fn) {
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+          // give a tick so scripts still run in consistent order
+          setTimeout(fn, 0);
+        } else {
+          document.addEventListener('DOMContentLoaded', fn);
+        }
+      }
+
+      ready(function () {
+        // Cross-browser compatibility improvements:
+        // - feature-detect subtle/webkitSubtle; fallback to a JS SHA-256 implementation when needed
+        // - feature-detect TextEncoder and provide a safe UTF-8 fallback
+        // - wrap localStorage/sessionStorage access in try/catch
+        // - fallback for crypto.getRandomValues (less secure but works)
+        // - fix missing SVG gradient id and small DOM/UX improvements (keyboard focusable play button)
+
+        // ----------------------
+        // Simple safe wrappers for storage (handles privacy modes)
+        // ----------------------
+        function safeGetStorageItem(store, key) {
+          try { return store.getItem(key); } catch (e) { return null; }
+        }
+        function safeSetStorageItem(store, key, value) {
+          try { store.setItem(key, value); return true; } catch (e) { return false; }
+        }
+        function safeRemoveStorageItem(store, key) {
+          try { store.removeItem(key); return true; } catch (e) { return false; }
+        }
+
+        // ----------------------
+        // Crypto helpers & polyfills
+        // ----------------------
+        var subtle = (window.crypto && (window.crypto.subtle || window.crypto.webkitSubtle)) ? (window.crypto.subtle || window.crypto.webkitSubtle) : null;
+        var hasGetRandomValues = !!(window.crypto && window.crypto.getRandomValues);
+
+        // TextEncoder fallback
+        function encodeUTF8(s){
+          if (typeof window.TextEncoder === 'function') {
+            return new TextEncoder().encode(s);
+          }
+          // fallback: use encodeURIComponent to get UTF-8 bytes
+          var encoded = encodeURIComponent(s);
+          var bytes = [];
+          for (var i = 0; i < encoded.length; i++) {
+            var ch = encoded.charAt(i);
+            if (ch === '%') {
+              bytes.push(parseInt(encoded.substr(i+1,2),16));
+              i += 2;
+            } else {
+              bytes.push(ch.charCodeAt(0));
+            }
+          }
+          return new Uint8Array(bytes);
+        }
+
+        // hex encode ArrayBuffer
+        function toHex(buf){
+          var bytes = new Uint8Array(buf);
+          var out = [];
+          for (var i=0;i<bytes.length;i++){
+            out.push(bytes[i].toString(16).padStart(2,'0'));
+          }
+          return out.join('');
+        }
+
+        // fallback PRNG salt generator (only used if crypto.getRandomValues is unavailable)
+        function randSaltHex(len) {
+          if (len === undefined) len = 16;
+          if (hasGetRandomValues) {
+            var arr = new Uint8Array(len);
+            window.crypto.getRandomValues(arr);
+            return toHex(arr.buffer);
+          }
+          // fallback to Math.random() seeded bytes (NOT cryptographically secure)
+          var out = new Uint8Array(len);
+          for (var j = 0; j < len; j++) {
+            out[j] = Math.floor(Math.random() * 256) & 0xff;
+          }
+          return toHex(out.buffer);
+        }
+
+        // A compact SHA-256 fallback implementation that accepts Uint8Array and returns hex.
+        // Source: a minimal public-domain implementation adapted for this use-case.
+        // Use subtle.digest when available for performance/crypto quality.
+        function sha256FallbackHex(bytes) {
+          // bytes: Uint8Array
+          // returns lower-case hex string
+          // Minimal SHA-256 implementation:
+          function rightRotate (n, x) { return (x >>> n) | (x << (32 - n)); }
+          var K = [
+            0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+            0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+            0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+            0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+            0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+            0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+            0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+            0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+          ];
+          // Pre-processing
+          var ml = bytes.length * 8;
+          // append 0x80 then pad with zeros until message length ≡ 448 mod 512
+          var withOne = new Uint8Array(bytes.length + 1);
+          withOne.set(bytes, 0);
+          withOne[bytes.length] = 0x80;
+          var padLen = (64 - ((withOne.length + 8) % 64)) % 64;
+          var totalLen = withOne.length + padLen + 8;
+          var msg = new Uint8Array(totalLen);
+          msg.set(withOne, 0);
+          // big-endian length in last 8 bytes
+          var dv = new DataView(msg.buffer);
+          dv.setUint32(msg.length - 8, Math.floor(ml / 0x100000000), false);
+          dv.setUint32(msg.length - 4, ml >>> 0, false);
+
+          // Initial hash values
+          var h0 = 0x6a09e667, h1 = 0xbb67ae85, h2 = 0x3c6ef372, h3 = 0xa54ff53a;
+          var h4 = 0x510e527f, h5 = 0x9b05688c, h6 = 0x1f83d9ab, h7 = 0x5be0cd19;
+
+          var w = new Uint32Array(64);
+          for (var i = 0; i < msg.length; i += 64) {
+            // message schedule
+            for (var t = 0; t < 16; t++) {
+              w[t] = dv.getUint32(i + t * 4, false);
+            }
+            for (t = 16; t < 64; t++) {
+              var s0 = (rightRotate(7, w[t-15]) ^ rightRotate(18, w[t-15]) ^ (w[t-15] >>> 3)) >>> 0;
+              var s1 = (rightRotate(17, w[t-2]) ^ rightRotate(19, w[t-2]) ^ (w[t-2] >>> 10)) >>> 0;
+              w[t] = (w[t-16] + s0 + w[t-7] + s1) >>> 0;
+            }
+            // initialize working variables
+            var a = h0, b = h1, c = h2, d = h3, e = h4, f = h5, g = h6, h = h7;
+            for (t = 0; t < 64; t++) {
+              var S1 = (rightRotate(6, e) ^ rightRotate(11, e) ^ rightRotate(25, e)) >>> 0;
+              var ch = ((e & f) ^ ((~e) & g)) >>> 0;
+              var temp1 = (h + S1 + ch + K[t] + w[t]) >>> 0;
+              var S0 = (rightRotate(2, a) ^ rightRotate(13, a) ^ rightRotate(22, a)) >>> 0;
+              var maj = ((a & b) ^ (a & c) ^ (b & c)) >>> 0;
+              var temp2 = (S0 + maj) >>> 0;
+
+              h = g;
+              g = f;
+              f = e;
+              e = (d + temp1) >>> 0;
+              d = c;
+              c = b;
+              b = a;
+              a = (temp1 + temp2) >>> 0;
+            }
+            h0 = (h0 + a) >>> 0;
+            h1 = (h1 + b) >>> 0;
+            h2 = (h2 + c) >>> 0;
+            h3 = (h3 + d) >>> 0;
+            h4 = (h4 + e) >>> 0;
+            h5 = (h5 + f) >>> 0;
+            h6 = (h6 + g) >>> 0;
+            h7 = (h7 + h) >>> 0;
+          }
+
+          function toHex32(x) {
+            return ('00000000' + (x >>> 0).toString(16)).slice(-8);
+          }
+          return toHex32(h0) + toHex32(h1) + toHex32(h2) + toHex32(h3) + toHex32(h4) + toHex32(h5) + toHex32(h6) + toHex32(h7);
+        }
+
+        async function hashWithSaltHex(password, saltHex){
+          // convert saltHex to bytes
+          var saltBytes = new Uint8Array(0);
+          try {
+            saltBytes = new Uint8Array(saltHex.match(/.{2}/g).map(function(b){ return parseInt(b,16); }));
+          } catch (e) {
+            saltBytes = new Uint8Array();
+          }
+          var pwBytes = encodeUTF8(password);
+          var combined = new Uint8Array(saltBytes.length + pwBytes.length);
+          combined.set(saltBytes,0);
+          combined.set(pwBytes,saltBytes.length);
+
+          if (subtle && subtle.digest) {
+            try {
+              var digest = await subtle.digest('SHA-256', combined);
+              return toHex(digest);
+            } catch (e) {
+              // fall through to fallback implementation
+            }
+          }
+          // fallback synchronous SHA-256
+          return sha256FallbackHex(combined);
+        }
+
+        // ----------------------
+        // Storage keys & helpers (use safe wrappers)
+        // ----------------------
+        var USERS_KEY = 'di_users_v1';
+        var SESSION_KEY = 'di_session_active';
+        var SESSION_USER = 'di_session_user';
+
+        function loadUsers(){
+          try {
+            var raw = safeGetStorageItem(localStorage, USERS_KEY);
+            return raw ? JSON.parse(raw) : {};
+          } catch(e){ return {}; }
+        }
+        function saveUsers(m){
+          try { safeSetStorageItem(localStorage, USERS_KEY, JSON.stringify(m)); } catch(e){}
+        }
+
+        async function createUser(username, password){
+          username = username.trim();
+          if (!username || !password) throw new Error('username/password required');
+          var users = loadUsers();
+          if (users[username]) throw new Error('username taken');
+          var salt = randSaltHex(16);
+          var hash = await hashWithSaltHex(password, salt);
+          users[username] = { salt: salt, hash: hash };
+          saveUsers(users);
+          return true;
+        }
+
+        async function verifyUser(username, password){
+          var users = loadUsers();
+          var entry = users[username];
+          if (!entry) return false;
+          var h = await hashWithSaltHex(password, entry.salt);
+          return h === entry.hash;
+        }
+
+        function setSession(username, remember){
+          try {
+            safeSetStorageItem(sessionStorage, SESSION_KEY, '1');
+            safeSetStorageItem(sessionStorage, SESSION_USER, username);
+            if (remember) {
+              safeSetStorageItem(localStorage, SESSION_KEY, '1');
+              safeSetStorageItem(localStorage, SESSION_USER, username);
+            }
+          } catch (e) {}
+        }
+        function clearSession(){
+          try {
+            safeRemoveStorageItem(sessionStorage, SESSION_KEY);
+            safeRemoveStorageItem(sessionStorage, SESSION_USER);
+            safeRemoveStorageItem(localStorage, SESSION_KEY);
+            safeRemoveStorageItem(localStorage, SESSION_USER);
+          } catch (e) {}
+        }
+        function isAuthenticated(){
+          return safeGetStorageItem(sessionStorage, SESSION_KEY) === '1' || safeGetStorageItem(localStorage, SESSION_KEY) === '1';
+        }
+        function currentUser(){
+          return safeGetStorageItem(sessionStorage, SESSION_USER) || safeGetStorageItem(localStorage, SESSION_USER) || '';
+        }
+
+        // ----------------------
+        // App: clock & verses
+        // ----------------------
+        var baseVerses = [
+          {"reference":"Philippians 4:13","text":"I can do all things through Christ who strengthens me."},
+          {"reference":"Psalm 23:1","text":"The LORD is my shepherd; I shall not want."},
+          {"reference":"John 3:16","text":"For God so loved the world, that he gave his only begotten Son..."},
+          {"reference":"Proverbs 3:5","text":"Trust in the LORD with all your heart and lean not on your own understanding."},
+          {"reference":"Romans 8:28","text":"And we know that all things work together for good to those who love God."},
+          {"reference":"Isaiah 40:31","text":"But they who wait for the LORD shall renew their strength."}
+        ];
+        var WANT = 1440;
+        var minuteVerses = [];
+        function buildMinuteVerses(){
+          minuteVerses = [];
+          if (!baseVerses || baseVerses.length === 0) return;
+          var i = 0;
+          while (minuteVerses.length < WANT){
+            minuteVerses.push(baseVerses[i % baseVerses.length]);
+            i++;
+          }
+        }
+        function pad(n){ return String(n).padStart(2,'0'); }
+
+        function updateClockOnce(){
+          var now = new Date();
+          var h = now.getHours();
+          var ampm = h >= 12 ? 'PM' : 'AM';
+          var hr12 = h % 12; hr12 = hr12 === 0 ? 12 : hr12;
+          var timeEl = document.getElementById('time');
+          var ampmEl = document.getElementById('ampm');
+          var dateEl = document.getElementById('date');
+          if (timeEl) timeEl.textContent = pad(hr12) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+          if (ampmEl) ampmEl.textContent = ampm;
+          try {
+            var opts = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            if (dateEl) dateEl.textContent = now.toLocaleDateString(undefined, opts);
+          } catch (e) {
+            if (dateEl) dateEl.textContent = now.toDateString();
+          }
+        }
+
+        function renderVerseForMinute(idx){
+          if (!minuteVerses || minuteVerses.length === 0) return;
+          var v = minuteVerses[idx % minuteVerses.length];
+          var qt = document.getElementById('verseQuote');
+          var rf = document.getElementById('verseRef');
+          if (qt) qt.textContent = '"' + v.text + '"';
+          if (rf) rf.textContent = v.reference || '';
+        }
+
+        function scheduleClockAndVerses(){
+          updateClockOnce();
+          renderVerseForMinute(new Date().getHours()*60 + new Date().getMinutes());
+          // seconds tick
+          var secInterval = setInterval(updateClockOnce, 1000);
+          // align minute changes
+          var now = new Date();
+          var msToNextMinute = (60 - now.getSeconds())*1000 - now.getMilliseconds();
+          setTimeout(function () {
+            renderVerseForMinute(new Date().getHours()*60 + new Date().getMinutes());
+            setInterval(function () { renderVerseForMinute(new Date().getHours()*60 + new Date().getMinutes()); }, 60*1000);
+          }, msToNextMinute);
+          // return cleanup if caller wants to stop intervals
+          return function () { clearInterval(secInterval); };
+        }
+
+        buildMinuteVerses();
+
+        // greeting/timezone
+        function userTimeZone(){ try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch(e){ return 'UTC'; } }
+        try { var tzEl = document.getElementById('tzName'); if (tzEl) tzEl.textContent = userTimeZone(); } catch(e){}
+        function getGreetingPart(){
+          var hour = new Date().getHours();
+          return hour < 12 ? 'Good Morning' : (hour < 18 ? 'Good Afternoon' : 'Good Evening');
+        }
+        function escapeHtml(s){ return String(s).replace(/[&<>"']/g, function(c){ return '&#' + c.charCodeAt(0) + ';'; }); }
+        function showGreetingFor(name){
+          var g = document.getElementById('greeting');
+          if (!name) { if (g) g.style.display='none'; return; }
+          if (g) g.style.display='block';
+          var el = document.getElementById('greetingText');
+          if (el) el.innerHTML = getGreetingPart() + ', glad to see you <strong>' + escapeHtml(name) + '</strong>!';
+        }
+
+        // ----------------------
+        // Login UI wiring
+        // ----------------------
+        var loginOverlay = document.getElementById('loginOverlay');
+        var loginUser = document.getElementById('loginUser');
+        var loginPass = document.getElementById('loginPass');
+        var doLogin = document.getElementById('doLogin');
+        var showRegister = document.getElementById('showRegister');
+        var registerForm = document.getElementById('registerForm');
+        var loginForm = document.getElementById('loginForm');
+        var showLogin = document.getElementById('showLogin');
+        var doRegister = document.getElementById('doRegister');
+        var regUser = document.getElementById('regUser');
+        var regPass = document.getElementById('regPass');
+        var regPass2 = document.getElementById('regPass2');
+        var messages = document.getElementById('messages');
+        var rememberChk = document.getElementById('rememberChk');
+        var subtitleEl = document.getElementById('subtitle');
+
+        function showMsg(msg, timeout){
+          if (timeout === undefined) timeout = 3500;
+          if (!messages) return;
+          messages.textContent = msg;
+          if (timeout) setTimeout(function(){ if (messages.textContent===msg) messages.textContent=''; }, timeout);
+        }
+
+        if (showRegister) showRegister.addEventListener('click', function(){ if (loginForm) loginForm.style.display='none'; if (registerForm) registerForm.style.display='block'; if (messages) messages.textContent=''; });
+        if (showLogin) showLogin.addEventListener('click', function(){ if (registerForm) registerForm.style.display='none'; if (loginForm) loginForm.style.display='block'; if (messages) messages.textContent=''; });
+
+        if (doRegister) doRegister.addEventListener('click', async function () {
+          var u = regUser ? regUser.value.trim() : '';
+          var p = regPass ? regPass.value : '';
+          var p2 = regPass2 ? regPass2.value : '';
+          if (!u || !p) { showMsg('Enter username & password'); return; }
+          if (p !== p2) { showMsg('Passwords do not match'); return; }
+          try {
+            await createUser(u,p);
+            showMsg('Account created — you can sign in now');
+            if (regUser) regUser.value = '';
+            if (regPass) regPass.value = '';
+            if (regPass2) regPass2.value = '';
+            if (registerForm) registerForm.style.display='none';
+            if (loginForm) loginForm.style.display='block';
+            if (loginUser) loginUser.value = u;
+          } catch (e) {
+            showMsg(e.message || 'Failed to create account');
+          }
+        });
+
+        if (doLogin) doLogin.addEventListener('click', async function () {
+          var u = loginUser ? loginUser.value.trim() : '';
+          var p = loginPass ? loginPass.value : '';
+          if (!u || !p) { showMsg('Enter username & password'); return; }
+          try {
+            var ok = await verifyUser(u,p);
+            if (ok) {
+              setSession(u, rememberChk ? rememberChk.checked : false);
+              afterLogin(u);
+            } else {
+              showMsg('Invalid username or password');
+            }
+          } catch (e) {
+            showMsg('Login error');
+          }
+        });
+
+        // allow Enter to submit forms (keydown and keypress inconsistencies cross-browser)
+        var maybeInputs = [loginUser, loginPass, regUser, regPass, regPass2].filter(Boolean);
+        maybeInputs.forEach(function(el) {
+          el.addEventListener('keypress', function(ev) {
+            if (ev.key === 'Enter' || ev.keyCode === 13) {
+              ev.preventDefault && ev.preventDefault();
+              if (el === regPass2 || el === regPass) {
+                if (doRegister) doRegister.click();
+              } else {
+                if (doLogin) doLogin.click();
+              }
+            }
+          });
+        });
+
+        // ----------------------
+        // After login: show app + play overlay
+        // ----------------------
+        var subtitleLoggedOut = 'A gentle moment of scripture and stillness — login to begin';
+        var subtitleLoggedIn  = 'A gentle moment of scripture and stillness';
+
+        function afterLogin(username){
+          // hide overlay & reveal app
+          if (loginOverlay) loginOverlay.style.display = 'none';
+          var appContent = document.getElementById('appContent');
+          if (appContent) appContent.setAttribute('aria-hidden','false');
+
+          // remove the "login to begin" phrase once authenticated
+          if (subtitleEl) subtitleEl.textContent = subtitleLoggedIn;
+
+          showGreetingFor(username);
+          scheduleClockAndVerses();
+          var po = document.getElementById('playOverlay');
+          if (po) po.style.display = 'flex';
+          // focus play button for keyboard users
+          var pb = document.getElementById('playButton');
+          if (pb) pb.focus();
+        }
+
+        // if session already present (remembered), restore
+        if (isAuthenticated()){
+          var uname = currentUser();
+          safeSetStorageItem(sessionStorage, SESSION_KEY, '1'); // ensure sessionStorage has it for this tab
+          safeSetStorageItem(sessionStorage, SESSION_USER, uname || '');
+          // immediately show app
+          if (loginOverlay) loginOverlay.style.display = 'none';
+          var appContent2 = document.getElementById('appContent');
+          if (appContent2) appContent2.setAttribute('aria-hidden','false');
+
+          if (subtitleEl) subtitleEl.textContent = subtitleLoggedIn;
+
+          showGreetingFor(uname);
+          scheduleClockAndVerses();
+          var po2 = document.getElementById('playOverlay');
+          if (po2) po2.style.display = 'flex';
+        }
+
+        // ----------------------
+        // Audio (unmuted) — create iframe on user click
+        // ----------------------
+        var YT_ID = '_QqFhkOcljI';
+        function createAudioIframeUnmuted(){
+          var container = document.getElementById('ytHidden');
+          if (!container) return false;
+          if (container.querySelector('iframe')) return true;
+          var iframe = document.createElement('iframe');
+          // Use embed URL with autoplay; some browsers still require the user gesture — we show a play overlay to satisfy that.
+          iframe.src = 'https://www.youtube.com/embed/' + encodeURIComponent(YT_ID) + '?autoplay=1&mute=0&playsinline=1&rel=0&modestbranding=1';
+          iframe.allow = 'autoplay; encrypted-media';
+          iframe.width = '1'; iframe.height = '1'; iframe.style.border='0';
+          container.appendChild(iframe);
+          return true;
+        }
+        var playButton = document.getElementById('playButton');
+        if (playButton) {
+          playButton.addEventListener('click', function () {
+            try {
+              createAudioIframeUnmuted();
+              var po = document.getElementById('playOverlay');
+              if (po) po.style.opacity = '0';
+              setTimeout(function(){ if (po) po.style.display = 'none'; }, 220);
+            } catch(e){
+              console.warn(e);
+            }
+          });
+          // keyboard support: Enter or Space activates
+          playButton.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Enter' || ev.key === ' ' || ev.keyCode === 13 || ev.keyCode === 32) {
+              ev.preventDefault && ev.preventDefault();
+              playButton.click();
+            }
+          });
+        }
+
+        // ----------------------
+        // Basic logout API (developer can wire this to a UI control)
+        // ----------------------
+        window.diLogout = function(){
+          clearSession();
+          if (subtitleEl) subtitleEl.textContent = subtitleLoggedOut;
+
+          if (loginOverlay) loginOverlay.style.display='flex';
+          var appContent3 = document.getElementById('appContent');
+          if (appContent3) appContent3.setAttribute('aria-hidden','true');
+          var g = document.getElementById('greeting');
+          if (g) g.style.display='none';
+          var po = document.getElementById('playOverlay');
+          if (po) po.style.display='none';
+        };
+
+        // For demo: expose function to delete stored accounts (dangerous, for dev)
+        window.diWipeUsers = function(){
+          try {
+            if (confirm('Delete all in-browser accounts? This cannot be undone.')) {
+              safeRemoveStorageItem(localStorage, USERS_KEY);
+              alert('Deleted.');
+            }
+          } catch (e) { alert('Unable to delete in this environment.'); }
+        };
+
+        // done — login gating enforces auth before access.
+      }); // ready
+    })();
+  </script>
 </body>
 </html>
