@@ -434,30 +434,102 @@
           if (po) po.style.display = 'flex';
         }
 
-        // AUDIO: improved cross-browser approach
+        // AUDIO: improved cross-browser approach (mobile unmute fallback via IFrame API)
         // Strategy:
-        // 1) When user clicks the play button, create the YouTube iframe with enablejsapi=1 and autoplay=1.
-        // 2) Setting the iframe.src inside the click handler counts as a user gesture in Chrome/Safari and usually allows autoplay.
-        // 3) If autoplay still gets blocked, we show a friendly message and keep the play overlay visible so the user can try again.
-        // 4) If you have a direct audio stream URL (mp3/ogg) we will try an <audio> element fallback (commented guidance included).
+        // 1) In click handler we create the iframe and set autoplay=1&mute=1 (muted autoplay allowed).
+        // 2) Because the iframe creation is user-initiated, we then create a YT.Player and call unMute() & playVideo() in onReady.
+        // 3) This sequence allows audible playback on mobile Chrome where direct autoplay unmuted could be blocked.
         const YT_ID = '_QqFhkOcljI';
+        let ytPlayer = null;
+        let ytApiLoaded = false;
+        // load the YouTube IFrame API (only once)
+        function ensureYouTubeApiLoaded() {
+          if (ytApiLoaded) return;
+          ytApiLoaded = true;
+          const s = document.createElement('script');
+          s.src = "https://www.youtube.com/iframe_api";
+          s.async = true;
+          document.head.appendChild(s);
+        }
+
+        // This will be called by the YouTube API when ready; keep it global-scoped as YT expects
+        window.onYouTubeIframeAPIReady = function() {
+          // no-op here; we'll create player when iframe element exists
+        };
+
         function createAudioIframeUnmuted(){
           const container = document.getElementById('ytHidden');
           if (!container) return false;
-          // if we've already created a player, nothing to do
+          // if we've already created a player/iframe, nothing to do
           if (container.querySelector('iframe')) return true;
 
-          // create iframe element but DO NOT append src until user gesture (we call this function from click)
+          // create iframe element and set muted autoplay initially (allowed on mobile)
           const iframe = document.createElement('iframe');
           iframe.id = 'ytplayer';
-          // allow autoplay and inline playback
-          iframe.allow = 'autoplay; encrypted-media';
+          // allow autoplay and inline playback and picture-in-picture
+          iframe.allow = 'autoplay; encrypted-media; fullscreen; picture-in-picture';
+          iframe.setAttribute('playsinline', '1');
           iframe.width = '1'; iframe.height = '1'; iframe.style.border = '0';
-          // create the src with autoplay=1 & enablejsapi=1 so YT treats it as a navigational user-initiated load
-          // playsinline=1 helps on mobile Safari
-          const src = `https://www.youtube.com/embed/${encodeURIComponent(YT_ID)}?autoplay=1&mute=0&playsinline=1&rel=0&modestbranding=1&enablejsapi=1`;
+          // create the src with autoplay=1 & mute=1 & enablejsapi=1 so we can control it via the API
+          const src = `https://www.youtube.com/embed/${encodeURIComponent(YT_ID)}?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1`;
           iframe.src = src;
           container.appendChild(iframe);
+
+          // ensure YouTube API script is loaded so we can unmute programmatically
+          ensureYouTubeApiLoaded();
+
+          // if YT global exists now, create Player wrapper to call unMute/play
+          // create player after small timeout to allow iframe to be parsed/registered by YouTube API
+          setTimeout(() => {
+            try {
+              if (window.YT && window.YT.Player && !ytPlayer) {
+                ytPlayer = new window.YT.Player('ytplayer', {
+                  events: {
+                    onReady: function(event) {
+                      try {
+                        // attempt to unmute and play; because we're inside a user gesture flow (click created the iframe),
+                        // mobile Chrome should allow this unmute/play action to produce audible sound.
+                        if (event && event.target && typeof event.target.unMute === 'function') {
+                          try { event.target.unMute(); } catch (e) { /* ignore */ }
+                        }
+                        try { event.target.playVideo && event.target.playVideo(); } catch (e) { /* ignore */ }
+                      } catch (e) {
+                        console.warn('YT onReady playback error', e);
+                      }
+                    },
+                    onError: function(err) {
+                      console.warn('YT player error', err);
+                    }
+                  }
+                });
+              } else {
+                // If YT not ready yet, try again shortly
+                let tries = 0;
+                const t = setInterval(() => {
+                  tries++;
+                  if (window.YT && window.YT.Player && !ytPlayer) {
+                    try {
+                      ytPlayer = new window.YT.Player('ytplayer', {
+                        events: {
+                          onReady: function(event) {
+                            try { event.target.unMute && event.target.unMute(); } catch(e){}
+                            try { event.target.playVideo && event.target.playVideo(); } catch(e){}
+                          },
+                          onError: function(err){ console.warn('YT player error', err); }
+                        }
+                      });
+                    } catch (e) {
+                      console.warn('YT create player error', e);
+                    }
+                    clearInterval(t);
+                  }
+                  if (tries > 20) clearInterval(t);
+                }, 150);
+              }
+            } catch (e) {
+              console.warn('createAudioIframeUnmuted: YT init failed', e);
+            }
+          }, 120);
           return true;
         }
 
@@ -466,8 +538,7 @@
           playButton.addEventListener('click', async () => {
             try {
               const ok = createAudioIframeUnmuted();
-              // give the browser a tiny moment then check whether audio is playing by inspecting AudioContext state or relying on heuristics
-              // we can't directly inspect cross-origin iframe audio state; so show a helpful message on failure.
+              // give the browser a tiny moment then check whether audio is playing by inspecting heuristics
               const po = document.getElementById('playOverlay');
               if (po) {
                 // hide overlay visually; keep a fallback in place if autoplay is blocked
